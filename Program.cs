@@ -98,7 +98,7 @@ if (launchSteamVr)
                 oculusProcess.WaitForExit();
             }
 
-            var oculusServerProcesses = Process.GetProcessesByName("OVRServer_x64");
+            var oculusServerProcesses = Process.GetProcesses().Where(p => p.ProcessName.StartsWith("OVRServer"));
             foreach (var oculusServerProcess in oculusServerProcesses)
             {
                 oculusServerProcess.Kill();
@@ -113,6 +113,6 @@ return;
 // Util functions
 List<Process> GetOculusProcesses()
 {
-    var processes = Process.GetProcessesByName("Client.exe").Where(p => p.MainModule?.FileName == @"C:\Program Files\Meta Horizon\Support\oculus-client");
+    var processes = Process.GetProcesses().Where(p => p.MainModule.FileName == @"C:\Program Files\Meta Horizon\Support\oculus-client\Client.exe");
     return processes.ToList();
 }
