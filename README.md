@@ -12,3 +12,15 @@ I know it's buggy, I just don't care.
 - Go back to Task Manager, look for OVRService again, right click on it and start it.
 
 Enjoy your completely yeeted Oculus Dash with SteamVR auto-start, and the extra performance!
+
+## Parameters
+If you manually invoke the program, you have a couple extra parameters. The default (paramless) is to start SteamVR.
+
+```
+riftstrapper.exe [--steamvr] [--nohook] [startup script path relative to the program]
+```
+
+- `--steamvr`: Launch SteamVR. If a startup script is specified, this must be added to start SteamVR.
+- `--nohook`: Don't close the Oculus Link connection when the SteamVR server exits
+
+Riftstrapper will also check the user's documents folder for a startup script. `%USERPROFILE%\Documents\Riftstrapper.ps1` will automatically be ran if it exists (unless a custom startup script is specified)

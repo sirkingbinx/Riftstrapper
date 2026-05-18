@@ -9,18 +9,23 @@ using System.Threading;
 // Initialization
 var launchSteamVr = true;
 var scriptPath = "";
+var noHook = false;
 
 if (args.Length > 0)
 {
     launchSteamVr = args.Contains("--steamvr");
-    scriptPath = args.FirstOrDefault(a => a != "--openvr") ?? "";
+    noHook = args.Contains("--nohook");
+    scriptPath = args.FirstOrDefault(a => a != "--steamvr" && a != "--nohook") ?? "";
 }
 
 if (!launchSteamVr && scriptPath == "")
     return; // nothing to do
 
-// Choose to run script
-if (scriptPath != "")
+// Custom script execution
+if (scriptPath == "")
+    scriptPath = Path.Combine(Path.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Riftstrapper.ps1");
+
+if (File.Exists(scriptPath))
 {
     var startInfo = new ProcessStartInfo
     {
@@ -51,68 +56,44 @@ if (launchSteamVr)
         return;
 
     var startupPath = Path.Combine(steamVrPath, @"bin\win64\vrstartup.exe");
-    var startupProcess = Process.Start(startupPath);
+    var vrStartupProcess = Process.Start(startupPath);
 
-    if (startupProcess == null)
+    if (noHook)
         return;
 
-    var stopwatch = Stopwatch.StartNew();
-    var vrMonitorProcesses = Process.GetProcessesByName("vrmonitor");
-    
-    while (vrMonitorProcesses.Length == 0 && !startupProcess.HasExited && stopwatch.Elapsed.Seconds < 10)
-    {
-        vrMonitorProcesses = Process.GetProcessesByName("vrmonitor");
+    if (vrStartupProcess == null)
+        return;
+
+    vrStartupProcess.WaitForExit();
+
+    // Wait for SteamVR to quit
+    while (IsSteamVRRunning) {
         Thread.Sleep(1000);
     }
 
-    if (vrMonitorProcesses.Length == 0)
-        return;
-    
-    // Close Steam when Oculus exits
-    foreach (var oculusProcess in GetOculusProcesses())
+    // Restart the Oculus Runtime service (which does OVRServer handling and other stuff)
+    // More proper way to kill a Link connection on exit without causing problems for the user
+    var closeLinkProcess = Process.Start(new ProcessStartInfo
     {
-        oculusProcess.EnableRaisingEvents = true;
-        oculusProcess.Exited += (_, _) =>
-        {
-            foreach (var vrMonitorProcess in vrMonitorProcesses)
-            {
-                vrMonitorProcess.Kill();
-                vrMonitorProcess.WaitForExit();
-            }
-        };
-    }
-    
-    // Close Oculus when Steam exits
-    foreach (var vrMonitorProcess in vrMonitorProcesses)
-    {
-        vrMonitorProcess.EnableRaisingEvents = true;
-        vrMonitorProcess.Exited += (_, _) =>
-        {
-            var oculusProcesses = GetOculusProcesses();
-            if (oculusProcesses == null)
-                return;
-            
-            foreach (var oculusProcess in oculusProcesses)
-            {
-                oculusProcess.Kill();
-                oculusProcess.WaitForExit();
-            }
+        FileName = "cmd.exe",
+        Arguments = "/c net stop \"Oculus VR Runtime Service\"",
+        CreateNoWindow = true,
+        UseShellExecute = false
+    });
+    closeLinkProcess.WaitForExit();
 
-            var oculusServerProcesses = Process.GetProcesses().Where(p => p.ProcessName.StartsWith("OVRServer"));
-            foreach (var oculusServerProcess in oculusServerProcesses)
-            {
-                oculusServerProcess.Kill();
-                oculusServerProcess.WaitForExit();
-            }
-        };
-    }
+    var startLinkProcess = Process.Start(new ProcessStartInfo
+    {
+        FileName = "cmd.exe",
+        Arguments = "/c net start \"Oculus VR Runtime Service\"",
+        CreateNoWindow = true,
+        UseShellExecute = false
+    });
+    startLinkProcess.WaitForExit();
 }
 
 return;
 
-// Util functions
-List<Process> GetOculusProcesses()
-{
-    var processes = Process.GetProcesses().Where(p => p.MainModule.FileName == @"C:\Program Files\Meta Horizon\Support\oculus-client\Client.exe");
-    return processes.ToList();
+bool IsSteamVRRunning() {
+    return Process.GetProcessesByName("vrserver").Any();
 }
