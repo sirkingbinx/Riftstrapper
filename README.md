@@ -1,6 +1,8 @@
 # Riftstrapper
 Run SteamVR or a PowerShell script instead of Oculus Dash. This is a short executable to replicate the functionality of [OculusKiller](https://github.com/BnuuySolutions/OculusKiller). You can even follow the same install instructions!
 
+I know it's buggy, I just don't care.
+
 ## Install
 (copied 1:1 from https://github.com/BnuuySolutions/OculusKiller#installation, just changed the path)
 
