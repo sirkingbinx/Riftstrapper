@@ -8,7 +8,7 @@ using System.Threading;
 
 // Initialization
 var launchSteamVr = true;
-var scriptPath = Path.Combine(Path.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Riftstrapper.ps1");
+var scriptPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Riftstrapper.ps1");
 var noHook = false;
 
 if (args.Length > 0)
@@ -61,7 +61,7 @@ if (launchSteamVr)
     vrStartupProcess.WaitForExit();
 
     // Wait for SteamVR to quit
-    while (IsSteamVRRunning) {
+    while (IsSteamVRRunning()) {
         Thread.Sleep(1000);
     }
 
