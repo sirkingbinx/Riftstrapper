@@ -8,7 +8,7 @@ using System.Threading;
 
 // Initialization
 var launchSteamVr = true;
-var scriptPath = "";
+var scriptPath = Path.Combine(Path.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Riftstrapper.ps1");
 var noHook = false;
 
 if (args.Length > 0)
@@ -18,13 +18,7 @@ if (args.Length > 0)
     scriptPath = args.FirstOrDefault(a => a != "--steamvr" && a != "--nohook") ?? "";
 }
 
-if (!launchSteamVr && scriptPath == "")
-    return; // nothing to do
-
 // Custom script execution
-if (scriptPath == "")
-    scriptPath = Path.Combine(Path.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Riftstrapper.ps1");
-
 if (File.Exists(scriptPath))
 {
     var startInfo = new ProcessStartInfo
